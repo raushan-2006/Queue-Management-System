@@ -17,14 +17,18 @@ const app = express();
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:3001",
-  "https://queue-management-system-9v1ajnuqu-raushan-2006s-projects.vercel.app",
   process.env.FRONTEND_URL,
 ].filter(Boolean);
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (
+        !origin ||
+        origin.includes("vercel.app") ||
+        origin.includes("localhost") ||
+        allowedOrigins.includes(origin)
+      ) {
         callback(null, true);
       } else {
         callback(new Error(`Not allowed by CORS: ${origin}`));
@@ -34,8 +38,6 @@ app.use(
     credentials: true,
   })
 );
-
-app.options("*", cors());
 
 app.use(express.json());
 
@@ -51,7 +53,18 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: allowedOrigins,
+    origin: function (origin, callback) {
+      if (
+        !origin ||
+        origin.includes("vercel.app") ||
+        origin.includes("localhost") ||
+        allowedOrigins.includes(origin)
+      ) {
+        callback(null, true);
+      } else {
+        callback(new Error(`Socket not allowed by CORS: ${origin}`));
+      }
+    },
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   },
